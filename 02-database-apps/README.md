@@ -10,7 +10,11 @@ Time to get serious! You'll deploy a MySQL database, connect to it from other po
 **The Mission**: Get MySQL running in your cluster
 
 ```bash
-# Deploy MySQL with environment configuration
+# Step 1: Create a Secret to store the MySQL password securely
+# (A Secret keeps sensitive data like passwords safe)
+kubectl create -f secrets/mysql-secret.yaml
+
+# Step 2: Deploy MySQL with environment configuration
 kubectl create -f pods/mysql.yaml --save-config --record
 
 # Watch it start up (databases take a moment)
@@ -28,7 +32,25 @@ kubectl logs mysql-pod
 kubectl exec -it mysql-pod -- env | grep MYSQL
 ```
 
-**What happened?** You deployed MySQL with a root password and created a database called "geek".
+**What happened?** You created a Secret containing a secure password, then deployed MySQL using that password and created a database called "geek".
+
+💡 **About Secrets**: Instead of putting passwords directly in configuration files (which is dangerous!), Kubernetes Secrets store sensitive data safely. The password is encoded in base64 format.
+
+### 🔐 Want to Use Your Own Password?
+
+If you want to change the password from the default "mySecurePassword":
+
+```bash
+# 1. Generate base64 encoding for your password
+echo -n 'YourNewPassword' | base64
+# This will output something like: WW91ck5ld1Bhc3N3b3Jk
+
+# 2. Edit secrets/mysql-secret.yaml and replace the value:
+# mysql-root-password: WW91ck5ld1Bhc3N3b3Jk  # YourNewPassword
+
+# 3. Then create the secret as normal
+kubectl create -f secrets/mysql-secret.yaml
+```
 
 ---
 
@@ -40,7 +62,7 @@ kubectl exec -it mysql-pod -- env | grep MYSQL
 # Jump into the MySQL pod
 kubectl exec -it mysql-pod -- /bin/bash
 
-# Connect to MySQL (password is 'password')
+# Connect to MySQL (password is 'mySecurePassword')
 mysql -u root -p
 
 # Explore what we have
@@ -78,7 +100,7 @@ kubectl run mysql-client --image=mysql:latest -it --rm -- /bin/bash
 
 # Inside the client pod, connect to MySQL using the IP
 mysql -h <mysql-pod-ip> -u root -p
-# Password: password
+# Password: mySecurePassword
 
 # Check our data is still there
 USE geek;
@@ -194,8 +216,9 @@ EXIT;
 ## 🧹 Cleanup Time
 
 ```bash
-# Clean up the MySQL pod
+# Clean up the MySQL pod and secret
 kubectl delete -f pods/mysql.yaml
+kubectl delete -f secrets/mysql-secret.yaml
 
 # Verify it's gone
 kubectl get pods
@@ -205,18 +228,21 @@ kubectl get pods
 
 ## 🎓 What You Learned
 
-1. **Environment Variables** configure applications in pods
-2. **Pod IPs** allow direct communication between containers
-3. **kubectl exec** is essential for debugging applications
-4. **Database connectivity** works the same as traditional networking
-5. **Data persistence** requires special storage (volumes) that we haven't covered yet
-6. **Network troubleshooting** uses standard tools like ping, nc, and telnet
+1. **Kubernetes Secrets** store sensitive data like passwords securely (base64 encoded)
+2. **Environment Variables** configure applications in pods using secrets and values
+3. **Pod IPs** allow direct communication between containers
+4. **kubectl exec** is essential for debugging applications
+5. **Database connectivity** works the same as traditional networking
+6. **Data persistence** requires special storage (volumes) that we haven't covered yet
+7. **Network troubleshooting** uses standard tools like ping, nc, and telnet
 
 ## ⚠️ Important Lessons
 
+- **NEVER** put passwords directly in YAML files - use Secrets instead!
 - Pod IPs change when pods restart - don't hardcode them!
 - Data in pods is ephemeral - it disappears when pods die
 - Always test connectivity and troubleshoot with kubectl exec
+- Secrets are base64 encoded, not encrypted - use proper cluster security
 
 ## 🚀 Next Step
 

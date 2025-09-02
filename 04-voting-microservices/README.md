@@ -39,6 +39,8 @@ Time for the real deal! You'll deploy a complete voting application with 5 micro
 
 **What we're building**: A complete microservices voting application with separate frontend, queue, processor, and database components.
 
+💡 **Security Note**: This application uses Kubernetes Secrets to store the PostgreSQL password securely, following best practices for sensitive data.
+
 ---
 
 ## 📖 Chapter 2: Setting Up the Namespace
@@ -48,6 +50,9 @@ Time for the real deal! You'll deploy a complete voting application with 5 micro
 ```bash
 # Create the vote namespace
 kubectl create -f namespaces/vote.yaml --save-config --record
+
+# Create PostgreSQL secret (stores database password safely)
+kubectl create -f secrets/postgres-secret.yaml
 
 # See all namespaces
 kubectl get namespaces
@@ -280,6 +285,7 @@ kubectl config set-context --current --namespace=vote
 # Clean up the entire voting application
 kubectl delete -f services/
 kubectl delete -f deployments/
+kubectl delete -f secrets/
 kubectl delete -f namespaces/
 
 # Switch back to default namespace

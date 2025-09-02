@@ -10,7 +10,10 @@ spec:
       image: mysql:latest
       env:
         - name: MYSQL_ROOT_PASSWORD
-          value: password
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
         - name: MYSQL_DATABASE
           value: geek
 
